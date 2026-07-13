@@ -219,7 +219,7 @@ export const Dashboard = () => {
               placeholder="Buscar cliente o producto..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-amber-50/5 text-slate-700 font-medium"
+              className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl text-base sm:text-sm focus:outline-none focus:border-amber-500 focus:bg-amber-50/5 text-slate-700 font-medium"
             />
           </div>
           {/* Date Picker Row */}
@@ -232,7 +232,7 @@ export const Dashboard = () => {
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 focus:bg-amber-50/5 text-slate-700 font-bold appearance-none"
+                className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl text-base sm:text-sm focus:outline-none focus:border-amber-500 focus:bg-amber-50/5 text-slate-700 font-bold appearance-none"
               />
             </div>
             {selectedDate && (

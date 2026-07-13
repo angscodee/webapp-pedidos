@@ -300,7 +300,7 @@ export const AdminPanel = () => {
                     placeholder="Ej. Juan Pérez"
                     value={userFormData.usuario}
                     onChange={handleUserInputChange}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all text-slate-700"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-base focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all text-slate-700"
                   />
                 </div>
               </div>
@@ -318,7 +318,7 @@ export const AdminPanel = () => {
                     placeholder="correo@unoconaroma.com"
                     value={userFormData.email}
                     onChange={handleUserInputChange}
-                    className="w-full pl-9 pr-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all text-slate-700 font-medium"
+                    className="w-full pl-9 pr-4 py-3 rounded-xl border border-slate-200 text-base focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all text-slate-700 font-medium"
                   />
                 </div>
               </div>
@@ -336,7 +336,7 @@ export const AdminPanel = () => {
                     placeholder="Mínimo 6 caracteres"
                     value={userFormData.password}
                     onChange={handleUserInputChange}
-                    className="w-full pl-9 pr-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all text-slate-700 font-medium"
+                    className="w-full pl-9 pr-4 py-3 rounded-xl border border-slate-200 text-base focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all text-slate-700 font-medium"
                   />
                 </div>
               </div>
@@ -354,7 +354,7 @@ export const AdminPanel = () => {
                       name="sede"
                       value={userFormData.sede}
                       onChange={handleUserInputChange}
-                      className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-amber-500 appearance-none text-slate-700 font-bold"
+                      className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 text-base bg-white focus:outline-none focus:border-amber-500 appearance-none text-slate-700 font-bold"
                     >
                       {SEDES.map(s => (
                         <option key={s} value={s}>Sede {s}</option>
@@ -374,7 +374,7 @@ export const AdminPanel = () => {
                       name="rol"
                       value={userFormData.rol}
                       onChange={handleUserInputChange}
-                      className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-amber-500 appearance-none text-slate-700 font-bold"
+                      className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 text-base bg-white focus:outline-none focus:border-amber-500 appearance-none text-slate-700 font-bold"
                     >
                       {ROLES.map(r => (
                         <option key={r} value={r}>Rol: {r === 'admin' ? 'Admin' : 'Vendedor'}</option>
