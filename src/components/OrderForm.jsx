@@ -8,6 +8,7 @@ const CAKE_PRODUCTS = [
   'Selva Negra',
   'Sublime',
   'Chocolate',
+  'Torta Vainilla',
   'Oreo',
   'Capucchino',
   'Torta Helada Pequeña',
