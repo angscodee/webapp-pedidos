@@ -3,13 +3,30 @@ import { X, Calendar, User, Phone, Clipboard, DollarSign, Image as ImageIcon, Sh
 import { useAuth } from '../hooks/useAuth';
 import { uploadReferenceImage } from '../services/orders';
 
-const PRODUCTS = [
-  'Torta de chocolate',
-  'Torta de vainilla',
-  'Torta personalizada',
-  'Bocaditos x50',
-  'Bocaditos x100'
+const CAKE_PRODUCTS = [
+  'Tres leches',
+  'Selva Negra',
+  'Sublime',
+  'Chocolate',
+  'Oreo',
+  'Capucchino',
+  'Torta Helada Pequeña',
+  'Torta Helada Mediana',
+  'Torta Helada Grande',
+  'Cheescake Maracuyá',
+  'Pie Limón',
+  'Torta Personalizada'
 ];
+
+const OTHER_PRODUCTS = [
+  'Pedido Pan Pullman',
+  'Pedido Pan Masa Madre',
+  'Pedido de Pan clásico',
+  'Pedido especial',
+  'Bocaditos (especificar cantidad)'
+];
+
+const PRODUCTS = [...CAKE_PRODUCTS, ...OTHER_PRODUCTS];
 
 const WEIGHT_OPTIONS = ['1/2 kg', '3/4 kg', '1 kg', '1 1/4 kg', 'Otro'];
 
@@ -112,7 +129,7 @@ export const OrderForm = ({ isOpen, onClose, onSubmit }) => {
     if (!formData.cliente.trim()) return setError('Ingrese el nombre del cliente');
     if (!formData.telefono.trim()) return setError('Ingrese el teléfono del cliente');
     if (!/^\d{9}$/.test(formData.telefono.trim())) return setError('El teléfono debe tener 9 dígitos');
-    if (formData.producto.startsWith('Torta') && formData.peso === 'Otro' && !formData.pesoPersonalizado.trim()) {
+    if (CAKE_PRODUCTS.includes(formData.producto) && formData.peso === 'Otro' && !formData.pesoPersonalizado.trim()) {
       return setError('Ingrese el peso personalizado para la torta');
     }
     if (!formData.fechaEntrega) return setError('Seleccione una fecha de entrega');
@@ -131,7 +148,7 @@ export const OrderForm = ({ isOpen, onClose, onSubmit }) => {
         finalImageUrl = await uploadReferenceImage(imageFile);
       }
 
-      const isCake = formData.producto.startsWith('Torta');
+      const isCake = CAKE_PRODUCTS.includes(formData.producto);
       const finalPeso = isCake 
         ? (formData.peso === 'Otro' ? formData.pesoPersonalizado.trim() : formData.peso)
         : 'N/A';
@@ -286,7 +303,7 @@ export const OrderForm = ({ isOpen, onClose, onSubmit }) => {
                   />
                 </div>
                 
-                {formData.producto.startsWith('Torta') ? (
+                {CAKE_PRODUCTS.includes(formData.producto) ? (
                   <div className="relative">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400">
                       <Weight size={12} />
@@ -304,14 +321,14 @@ export const OrderForm = ({ isOpen, onClose, onSubmit }) => {
                   </div>
                 ) : (
                   <div className="relative bg-slate-50 text-slate-400 text-[10px] flex items-center justify-center rounded-xl border border-slate-100 px-1 py-3 text-center leading-tight">
-                    Bocaditos (N/A)
+                    Otros (N/A)
                   </div>
                 )}
               </div>
             </div>
 
             {/* Custom Weight Input */}
-            {formData.producto.startsWith('Torta') && formData.peso === 'Otro' && (
+            {CAKE_PRODUCTS.includes(formData.producto) && formData.peso === 'Otro' && (
               <div className="relative animate-fadeIn">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
                   <Weight size={16} />
