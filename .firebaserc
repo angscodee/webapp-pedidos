@@ -1,6 +1,7 @@
 {
   "projects": {
-    "admin": "pedidosuca-f53be"
+    "admin": "pedidosuca-f53be",
+    "default": "pedidosuca-f53be"
   },
   "targets": {},
   "etags": {}
