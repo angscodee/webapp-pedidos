@@ -169,18 +169,10 @@ export const OrderCard = ({ order, onStatusUpdate }) => {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-colors"
+              className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-colors"
             >
               <MessageCircle size={14} className="stroke-[2.5]" />
               <span>WhatsApp</span>
-            </a>
-            <a 
-              href={`tel:${telefono}`}
-              onClick={(e) => e.stopPropagation()}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold bg-slate-50 text-slate-700 border border-slate-100 hover:bg-slate-100 transition-colors"
-            >
-              <Phone size={14} className="stroke-[2.5]" />
-              <span>Llamar</span>
             </a>
           </div>
 

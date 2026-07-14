@@ -229,14 +229,12 @@ export const OrderDetail = () => {
             
             <div className="flex gap-2 items-center">
               <a 
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-500/10 transition-all active:scale-95 flex items-center gap-1.5 font-bold text-xs"
-                title="WhatsApp Cliente"
+                href={`tel:${telefono}`}
+                className="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl border border-slate-200/50 transition-all active:scale-95 flex items-center gap-1.5 font-bold text-xs"
+                title="Llamar Cliente"
               >
-                <MessageCircle size={16} />
-                <span>WhatsApp</span>
+                <Phone size={16} />
+                <span>Llamar</span>
               </a>
             </div>
           </div>
