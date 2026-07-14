@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { getOrderById, updateOrderStatus, toDate } from '../services/orders';
+import { getOrderById, updateOrderStatus, updateOrder, toDate } from '../services/orders';
 import { StatusBadge } from '../components/StatusBadge';
+import { OrderForm } from '../components/OrderForm';
 import { 
   ArrowLeft, 
   Phone, 
@@ -18,7 +19,8 @@ import {
   Clipboard,
   FileText,
   Camera,
-  RotateCcw
+  RotateCcw,
+  Pencil
 } from 'lucide-react';
 
 export const OrderDetail = () => {
@@ -30,6 +32,7 @@ export const OrderDetail = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState('');
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const fetchOrder = async () => {
     try {
@@ -57,6 +60,17 @@ export const OrderDetail = () => {
       alert('Error al actualizar estado: ' + e.message);
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleEditSubmit = async (orderPayload) => {
+    if (!order || !user) return;
+    try {
+      const updatedOrder = await updateOrder(order.id, orderPayload, user);
+      setOrder(updatedOrder);
+      setIsEditOpen(false);
+    } catch (e) {
+      alert('Error al actualizar pedido: ' + e.message);
     }
   };
 
@@ -179,7 +193,17 @@ export const OrderDetail = () => {
             </button>
             <h2 className="text-base font-black text-slate-800">Detalle de Pedido</h2>
           </div>
-          <StatusBadge status={estado} />
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setIsEditOpen(true)}
+              className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl border border-amber-100/50 transition-all flex items-center gap-1.5 text-xs font-bold active:scale-95"
+              title="Editar Pedido"
+            >
+              <Pencil size={13} className="stroke-[2.5]" />
+              <span>Editar</span>
+            </button>
+            <StatusBadge status={estado} />
+          </div>
         </div>
       </div>
 
@@ -203,22 +227,16 @@ export const OrderDetail = () => {
               </p>
             </div>
             
-            <div className="flex gap-2">
-              <a 
-                href={`tel:${telefono}`}
-                className="p-3 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-2xl border border-slate-100 transition-all active:scale-95"
-                title="Llamar Cliente"
-              >
-                <Phone size={18} />
-              </a>
+            <div className="flex gap-2 items-center">
               <a 
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-2xl border border-emerald-100/50 transition-all active:scale-95"
+                className="py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-500/10 transition-all active:scale-95 flex items-center gap-1.5 font-bold text-xs"
                 title="WhatsApp Cliente"
               >
-                <MessageCircle size={18} />
+                <MessageCircle size={16} />
+                <span>WhatsApp</span>
               </a>
             </div>
           </div>
@@ -378,6 +396,13 @@ export const OrderDetail = () => {
           </div>
         </section>
       </div>
+
+      <OrderForm 
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        onSubmit={handleEditSubmit}
+        initialData={order}
+      />
     </div>
   );
 };

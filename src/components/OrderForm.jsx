@@ -33,7 +33,23 @@ const WEIGHT_OPTIONS = ['1/2 kg', '3/4 kg', '1 kg', '1 1/4 kg', 'Otro'];
 
 const SEDES = ['SD', 'Florencia', 'Penta', 'Porvenir', 'Las Quintanas'];
 
-export const OrderForm = ({ isOpen, onClose, onSubmit }) => {
+const formatDateForInput = (dateVal) => {
+  if (!dateVal) return '';
+  try {
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return '';
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  } catch (e) {
+    return '';
+  }
+};
+
+export const OrderForm = ({ isOpen, onClose, onSubmit, initialData }) => {
   const { user } = useAuth();
   
   const [formData, setFormData] = useState({
@@ -71,15 +87,50 @@ export const OrderForm = ({ isOpen, onClose, onSubmit }) => {
     setImagePreview('');
   };
 
-  // Update default sede when user changes
+  // Populate or reset form on open/change
   useEffect(() => {
-    if (user) {
-      setFormData(prev => ({
-        ...prev,
-        sede: user.rol === 'admin' ? prev.sede : user.sede
-      }));
+    if (isOpen) {
+      if (initialData) {
+        const isCustomPeso = initialData.peso && !WEIGHT_OPTIONS.includes(initialData.peso);
+        setFormData({
+          cliente: initialData.cliente || '',
+          telefono: initialData.telefono || '',
+          producto: initialData.producto || PRODUCTS[0],
+          cantidad: initialData.cantidad || 1,
+          peso: isCustomPeso ? 'Otro' : (initialData.peso || WEIGHT_OPTIONS[2]),
+          pesoPersonalizado: isCustomPeso ? initialData.peso : '',
+          fechaEntrega: formatDateForInput(initialData.fechaEntrega),
+          observaciones: initialData.observaciones || '',
+          imagenReferencia: initialData.imagenReferencia || '',
+          precioTotal: initialData.precioTotal !== undefined ? initialData.precioTotal : '',
+          pagoCompleto: Number(initialData.precioTotal) === Number(initialData.montoPagado),
+          montoPagado: initialData.montoPagado !== undefined ? initialData.montoPagado : '',
+          sede: initialData.sede || user?.sede || SEDES[0]
+        });
+        setImagePreview(initialData.imagenReferencia || '');
+        setImageFile(null);
+      } else {
+        setFormData({
+          cliente: '',
+          telefono: '',
+          producto: PRODUCTS[0],
+          cantidad: 1,
+          peso: WEIGHT_OPTIONS[2],
+          pesoPersonalizado: '',
+          fechaEntrega: '',
+          observaciones: '',
+          imagenReferencia: '',
+          precioTotal: '',
+          pagoCompleto: true,
+          montoPagado: '',
+          sede: user?.sede || SEDES[0]
+        });
+        setImagePreview('');
+        setImageFile(null);
+      }
+      setError('');
     }
-  }, [user]);
+  }, [isOpen, initialData, user]);
 
   // Set minimum date to today
   const getMinDateTimeString = () => {
@@ -191,7 +242,7 @@ export const OrderForm = ({ isOpen, onClose, onSubmit }) => {
 
       onClose();
     } catch (err) {
-      setError(err.message || 'Error al registrar pedido');
+      setError(err.message || (initialData ? 'Error al guardar cambios' : 'Error al registrar pedido'));
     } finally {
       setLoading(false);
     }
@@ -214,7 +265,7 @@ export const OrderForm = ({ isOpen, onClose, onSubmit }) => {
         <div className="px-6 pb-2 flex items-center justify-between border-b border-slate-100">
           <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
             <span className="w-2.5 h-6 rounded-full bg-amber-500"></span>
-            Registrar Nuevo Pedido
+            {initialData ? 'Editar Pedido' : 'Registrar Nuevo Pedido'}
           </h3>
           <button 
             onClick={onClose}
@@ -358,7 +409,7 @@ export const OrderForm = ({ isOpen, onClose, onSubmit }) => {
                 <input
                   type="datetime-local"
                   name="fechaEntrega"
-                  min={getMinDateTimeString()}
+                  min={initialData ? undefined : getMinDateTimeString()}
                   value={formData.fechaEntrega}
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-base focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all text-slate-700"
@@ -512,7 +563,7 @@ export const OrderForm = ({ isOpen, onClose, onSubmit }) => {
             {loading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             ) : (
-              'Registrar Pedido'
+              initialData ? 'Guardar Cambios' : 'Registrar Pedido'
             )}
           </button>
         </form>

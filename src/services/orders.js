@@ -244,6 +244,85 @@ export const updateOrderStatus = async (orderId, newStatus, currentUser) => {
   return rowToOrder(data);
 };
 
+// ─── Update Order Details ─────────────────────────────────────────────────────
+export const updateOrder = async (orderId, orderData, currentUser) => {
+  const {
+    cliente, telefono, producto, cantidad, observaciones,
+    fechaEntrega, sede, precioTotal, montoPagado, imagenReferencia
+  } = orderData;
+
+  const editNode = {
+    estado: 'editado',
+    fecha: new Date().toISOString(),
+    modificadoPor: currentUser.uid,
+    modificadoPorNombre: currentUser.usuario || 'Usuario UCA'
+  };
+
+  if (!hasSupabaseCredentials) {
+    const orders = getMockOrders();
+    const index = orders.findIndex(o => o.id === orderId);
+    if (index === -1) throw new Error('Pedido no encontrado');
+    const order = orders[index];
+    const updated = {
+      ...order,
+      cliente,
+      telefono,
+      producto,
+      cantidad: Number(cantidad),
+      observaciones: observaciones || '',
+      fechaEntrega: fechaEntrega instanceof Date ? fechaEntrega.toISOString() : fechaEntrega,
+      sede,
+      precioTotal: Number(precioTotal) || 0,
+      montoPagado: Number(montoPagado) || 0,
+      imagenReferencia: imagenReferencia !== undefined ? imagenReferencia : order.imagenReferencia,
+      actualizadoEn: new Date().toISOString(),
+      historial: [...(order.historial || []), editNode]
+    };
+    orders[index] = updated;
+    saveMockOrders(orders);
+    return updated;
+  }
+
+  // Supabase implementation
+  // Fetch existing order to get current history and image
+  const { data: existing, error: fetchError } = await supabase
+    .from('pedidos')
+    .select('historial, imagen_referencia, estado')
+    .eq('id', orderId)
+    .single();
+
+  if (fetchError) throw new Error(fetchError.message);
+
+  const updatedEditNode = {
+    ...editNode,
+    estado: existing.estado || 'registrado' // keep current state in the history node
+  };
+
+  const { data, error } = await supabase
+    .from('pedidos')
+    .update({
+      cliente,
+      telefono,
+      producto,
+      cantidad: Number(cantidad),
+      observaciones: observaciones || '',
+      fecha_entrega: fechaEntrega instanceof Date ? fechaEntrega.toISOString() : fechaEntrega,
+      sede,
+      precio_total: Number(precioTotal) || 0,
+      monto_pagado: Number(montoPagado) || 0,
+      imagen_referencia: imagenReferencia !== undefined ? imagenReferencia : existing.imagen_referencia,
+      actualizado_en: new Date().toISOString(),
+      historial: [...(existing.historial || []), updatedEditNode]
+    })
+    .eq('id', orderId)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return rowToOrder(data);
+};
+
+
 // ─── Subscribe to Orders (realtime) ──────────────────────────────────────────
 export const subscribeToOrders = (callback, filters = {}) => {
   if (!hasSupabaseCredentials) {
