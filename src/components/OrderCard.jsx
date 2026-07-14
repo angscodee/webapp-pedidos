@@ -161,8 +161,19 @@ export const OrderCard = ({ order, onStatusUpdate }) => {
               </span>
             </div>
           </div>
-
-
+          {/* Quick Buttons */}
+          <div className="flex gap-2">
+            <a 
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-colors"
+            >
+              <MessageCircle size={14} className="stroke-[2.5]" />
+              <span>WhatsApp</span>
+            </a>
+          </div>
 
           {/* Actions & Detail Navigation */}
           <div className="flex flex-col sm:flex-row gap-2 pt-2">
