@@ -321,14 +321,16 @@ export const OrderDetail = () => {
                 <span>Eliminar</span>
               </button>
             )}
-            <button 
-              onClick={() => setIsEditOpen(true)}
-              className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl border border-amber-100/50 transition-all flex items-center gap-1.5 text-xs font-bold active:scale-95"
-              title="Editar Pedido"
-            >
-              <Pencil size={13} className="stroke-[2.5]" />
-              <span>Editar</span>
-            </button>
+            {user?.rol !== 'pastelero' && (
+              <button 
+                onClick={() => setIsEditOpen(true)}
+                className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl border border-amber-100/50 transition-all flex items-center gap-1.5 text-xs font-bold active:scale-95"
+                title="Editar Pedido"
+              >
+                <Pencil size={13} className="stroke-[2.5]" />
+                <span>Editar</span>
+              </button>
+            )}
             <StatusBadge status={estado} />
           </div>
         </div>
@@ -559,7 +561,7 @@ export const OrderDetail = () => {
         </section>
 
         {/* Actions Transition Panel */}
-        {nextActions.length > 0 && (
+        {nextActions.length > 0 && user?.rol !== 'pastelero' && (
           <section className="bg-white rounded-3xl border border-slate-100 p-5 shadow-premium space-y-3">
             <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">Actualizar Estado</h4>
             
