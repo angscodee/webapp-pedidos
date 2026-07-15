@@ -44,6 +44,24 @@ export const OrderCard = ({ order, onStatusUpdate }) => {
     return false;
   })();
 
+  const getProductionStatus = () => {
+    if (!order || !order.historial) return { status: 'none' };
+    const uploads = [...order.historial].reverse().filter(h => h.estado === 'produccion_lista' || h.imagenProduccion);
+    const approvals = [...order.historial].reverse().filter(h => h.estado === 'produccion_aprobada' || h.estado === 'produccion_corregir');
+    
+    const latestUpload = uploads[0];
+    const latestApproval = approvals[0];
+    
+    if (!latestUpload) return { status: 'none' };
+    
+    if (latestApproval && new Date(latestApproval.fecha) > new Date(latestUpload.fecha)) {
+      return {
+        status: latestApproval.estado === 'produccion_aprobada' ? 'aprobado' : 'corregir'
+      };
+    }
+    return { status: 'pendiente' };
+  };
+
   // Format delivery date nicely in Spanish
   const formatDelivery = (dateVal) => {
     try {
@@ -189,15 +207,20 @@ export const OrderCard = ({ order, onStatusUpdate }) => {
               <Eye size={14} className="stroke-[2.5]" />
               Ver Ficha
             </button>
-            {nextAction && user?.rol !== 'pastelero' && (
-              <button 
-                onClick={(e) => handleStatusChange(e, nextAction.status)}
-                className={`w-full sm:flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] ${nextAction.classes}`}
-              >
-                <nextAction.icon size={14} className="stroke-[2.5]" />
-                <span>{nextAction.label}</span>
-              </button>
-            )}
+            {nextAction && user?.rol !== 'pastelero' && (() => {
+              const isTransitionDisabled = nextAction.status === 'en_sede' && getProductionStatus().status !== 'aprobado';
+              return (
+                <button 
+                  onClick={(e) => handleStatusChange(e, nextAction.status)}
+                  disabled={isTransitionDisabled}
+                  className={`w-full sm:flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] ${nextAction.classes} ${isTransitionDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  title={isTransitionDisabled ? 'Requiere Visto Bueno de producción' : ''}
+                >
+                  <nextAction.icon size={14} className="stroke-[2.5]" />
+                  <span>{nextAction.label} {isTransitionDisabled ? '(Falta V°B°)' : ''}</span>
+                </button>
+              );
+            })()}
           </div>
         </div>
       )}

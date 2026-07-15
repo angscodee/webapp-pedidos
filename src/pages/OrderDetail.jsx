@@ -518,23 +518,46 @@ export const OrderDetail = () => {
           })()}
 
           {/* Baker actions: file upload */}
-          {user?.rol === 'pastelero' && (
-            <div className="space-y-2">
-              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 hover:border-amber-400 transition-all group">
-                <div className="flex flex-col items-center justify-center pt-4 pb-4 text-slate-400 group-hover:text-amber-500">
-                  <Upload size={20} className="mb-1 stroke-[1.5] animate-bounce" />
-                  <p className="text-xs font-bold">{uploadingImage ? 'Subiendo imagen...' : 'Subir Foto Terminado (V°B°)'}</p>
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleProductionPhotoUpload}
-                  disabled={uploadingImage}
-                  className="sr-only"
-                />
-              </label>
-            </div>
-          )}
+          {user?.rol === 'pastelero' && (() => {
+            const prodStatus = getProductionStatus();
+            const canUpload = estado === 'registrado' && (prodStatus.status === 'none' || prodStatus.status === 'corregir');
+
+            if (!canUpload) {
+              if (prodStatus.status === 'pendiente') {
+                return (
+                  <div className="bg-amber-50 border border-amber-200/50 p-4 rounded-2xl text-center">
+                    <p className="text-xs font-bold text-amber-800">Foto enviada. Esperando visto bueno de la sede...</p>
+                  </div>
+                );
+              }
+              if (prodStatus.status === 'aprobado') {
+                return (
+                  <div className="bg-emerald-50 border border-emerald-200/50 p-4 rounded-2xl text-center">
+                    <p className="text-xs font-bold text-emerald-800">✓ Producción aprobada. El pedido ya no permite más modificaciones de foto.</p>
+                  </div>
+                );
+              }
+              return null;
+            }
+
+            return (
+              <div className="space-y-2">
+                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 hover:border-amber-400 transition-all group">
+                  <div className="flex flex-col items-center justify-center pt-4 pb-4 text-slate-400 group-hover:text-amber-500">
+                    <Upload size={20} className="mb-1 stroke-[1.5] animate-bounce" />
+                    <p className="text-xs font-bold">{uploadingImage ? 'Subiendo imagen...' : 'Subir Foto Terminado (V°B°)'}</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProductionPhotoUpload}
+                    disabled={uploadingImage}
+                    className="sr-only"
+                  />
+                </label>
+              </div>
+            );
+          })()}
 
           {/* Seller / Admin actions: approve or request correction */}
           {(() => {
@@ -584,28 +607,36 @@ export const OrderDetail = () => {
             
             {user?.rol === 'admin' ? (
               <div className="flex flex-col md:grid md:grid-cols-2 gap-2">
-                {nextActions.map(action => (
+                {nextActions.map(action => {
+                  const isTransitionDisabled = action.status === 'en_sede' && getProductionStatus().status !== 'aprobado';
+                  return (
+                    <button
+                      key={action.status}
+                      onClick={() => handleStatusChange(action.status)}
+                      disabled={updating || isTransitionDisabled}
+                      className={`py-3 px-3 rounded-2xl border text-xs font-bold transition-all active:scale-98 ${action.classes} ${isTransitionDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                      title={isTransitionDisabled ? 'Requiere Visto Bueno de producción' : ''}
+                    >
+                      Marcar como "{action.label}" {isTransitionDisabled ? '(Falta V°B°)' : ''}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              nextActions.map(action => {
+                const isTransitionDisabled = action.status === 'en_sede' && getProductionStatus().status !== 'aprobado';
+                return (
                   <button
                     key={action.status}
                     onClick={() => handleStatusChange(action.status)}
-                    disabled={updating}
-                    className={`py-3 px-3 rounded-2xl border text-xs font-bold transition-all active:scale-98 ${action.classes}`}
+                    disabled={updating || isTransitionDisabled}
+                    className={`w-full py-4 rounded-2xl text-xs font-black shadow-lg shadow-amber-500/10 transition-all active:scale-98 ${action.classes} ${isTransitionDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                    title={isTransitionDisabled ? 'Requiere Visto Bueno de producción' : ''}
                   >
-                    Marcar como "{action.label}"
+                    {action.label} {isTransitionDisabled ? '(Falta V°B°)' : ''}
                   </button>
-                ))}
-              </div>
-            ) : (
-              nextActions.map(action => (
-                <button
-                  key={action.status}
-                  onClick={() => handleStatusChange(action.status)}
-                  disabled={updating}
-                  className={`w-full py-4 rounded-2xl text-xs font-black shadow-lg shadow-amber-500/10 transition-all active:scale-98 ${action.classes}`}
-                >
-                  {action.label}
-                </button>
-              ))
+                );
+              })
             )}
           </section>
         )}
