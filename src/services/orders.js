@@ -312,7 +312,7 @@ export const updateOrder = async (orderId, orderData, currentUser) => {
       monto_pagado: Number(montoPagado) || 0,
       imagen_referencia: imagenReferencia !== undefined ? imagenReferencia : existing.imagen_referencia,
       actualizado_en: new Date().toISOString(),
-      historial: [...(existing.historial || []), updatedEditNode]
+      historial: orderData.historial !== undefined ? orderData.historial : [...(existing.historial || []), updatedEditNode]
     })
     .eq('id', orderId)
     .select()
