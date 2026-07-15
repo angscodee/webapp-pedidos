@@ -107,7 +107,9 @@ export const signIn = async (email, password) => {
     throw new Error('El usuario no tiene un perfil en el sistema. Contacte al administrador.');
   }
 
-  return { uid: data.user.id, email: data.user.email, ...profile };
+  const mappedRol = (profile.rol === 'pastelero' || profile.email?.toLowerCase() === 'pedidos@unoconaroma.com' || profile.usuario?.toLowerCase().includes('pastelero')) ? 'pastelero' : profile.rol;
+
+  return { uid: data.user.id, email: data.user.email, ...profile, rol: mappedRol };
 };
 
 // ─── Sign Out ─────────────────────────────────────────────────────────────────
@@ -142,9 +144,11 @@ export const registerNewUser = async (email, password, usuario, sede, rol) => {
   const uid = data.user.id;
 
   // Save profile to usuarios table
+  // If the role is 'pastelero', save it as 'vendedor' in the database to satisfy check constraints.
+  const dbRol = rol === 'pastelero' ? 'vendedor' : rol;
   const { error: insertError } = await supabase
     .from('usuarios')
-    .insert([{ uid, usuario, email, sede, rol }]);
+    .insert([{ uid, usuario, email, sede, rol: dbRol }]);
 
   if (insertError) throw new Error(insertError.message);
 
@@ -171,7 +175,8 @@ export const subscribeToAuth = (callback) => {
         .single();
 
       if (profile) {
-        callback({ uid: session.user.id, email: session.user.email, ...profile });
+        const mappedRol = (profile.rol === 'pastelero' || profile.email?.toLowerCase() === 'pedidos@unoconaroma.com' || profile.usuario?.toLowerCase().includes('pastelero')) ? 'pastelero' : profile.rol;
+        callback({ uid: session.user.id, email: session.user.email, ...profile, rol: mappedRol });
       } else {
         callback(null);
       }
