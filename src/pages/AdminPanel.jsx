@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 const SEDES = ['SD', 'Florencia', 'Penta', 'Porvenir', 'Las Quintanas'];
-const ROLES = ['vendedor', 'admin'];
+const ROLES = ['vendedor', 'admin', 'pastelero'];
 
 export const AdminPanel = () => {
   const { user, registerUser } = useAuth();
@@ -377,7 +377,7 @@ export const AdminPanel = () => {
                       className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 text-base bg-white focus:outline-none focus:border-amber-500 appearance-none text-slate-700 font-bold"
                     >
                       {ROLES.map(r => (
-                        <option key={r} value={r}>Rol: {r === 'admin' ? 'Admin' : 'Vendedor'}</option>
+                        <option key={r} value={r}>Rol: {r === 'admin' ? 'Admin' : r === 'pastelero' ? 'Pastelero' : 'Vendedor'}</option>
                       ))}
                     </select>
                   </div>
