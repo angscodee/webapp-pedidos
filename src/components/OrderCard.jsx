@@ -187,13 +187,13 @@ export const OrderCard = ({ order, onStatusUpdate }) => {
               <Eye size={14} className="stroke-[2.5]" />
               Ver Ficha
             </button>
-            {nextAction && (
+            {nextAction && user?.rol !== 'pastelero' && (
               <button 
                 onClick={(e) => handleStatusChange(e, nextAction.status)}
                 className={`w-full sm:flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] ${nextAction.classes}`}
               >
                 <nextAction.icon size={14} className="stroke-[2.5]" />
-                {nextAction.label}
+                <span>{nextAction.label}</span>
               </button>
             )}
           </div>
