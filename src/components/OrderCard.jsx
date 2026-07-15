@@ -31,12 +31,12 @@ export const OrderCard = ({ order, onStatusUpdate }) => {
   const cleanPhoneFormatted = cleanPhone.startsWith('51') ? cleanPhone : `51${cleanPhone}`;
   const whatsappUrl = `https://wa.me/${cleanPhoneFormatted}?text=Hola%20${encodeURIComponent(cliente)},%20te%20escribimos%20de%20Uno%20con%20Aroma%20sobre%20tu%20pedido%20de%20${encodeURIComponent(producto)}.`;
 
-  // Warning alert: if delivery scheduled before 2 PM, must be in branch by the day before.
+  // Warning alert: if delivery scheduled before 3 PM (15:00), must be in branch by the day before.
   // If it is the delivery day (or later) and still 'registrado', show warning.
   const isLateWarning = estado === 'registrado' && (() => {
     try {
       const delivery = toDate(fechaEntrega);
-      if (delivery.getHours() < 14) {
+      if (delivery.getHours() < 15) {
         const startOfDeliveryDay = new Date(delivery.getFullYear(), delivery.getMonth(), delivery.getDate());
         return new Date() >= startOfDeliveryDay;
       }

@@ -27,7 +27,11 @@ export const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Scope branch selector for admins. Default is "TODAS"
+  const canSeeAllSedes = user?.rol === 'admin' || 
+                         user?.rol === 'pastelero' || 
+                         (user?.rol === 'vendedor' && user?.sede === 'SD');
+
+  // Scope branch selector for privileged roles. Default is "TODAS"
   const [selectedSede, setSelectedSede] = useState('TODAS');
   const { orders, loading, addOrder, updateStatus } = useOrders(selectedSede);
 
@@ -44,6 +48,32 @@ export const Dashboard = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
 
+  // Request browser notifications for bakers
+  React.useEffect(() => {
+    if (user?.rol === 'pastelero' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+      
+      const todayStr = new Date().toDateString();
+      const todayPending = orders.filter(o => {
+        const d = toDate(o.fechaEntrega);
+        return d.toDateString() === todayStr && o.estado === 'registrado';
+      });
+
+      if (todayPending.length > 0 && Notification.permission === 'granted') {
+        try {
+          new Notification("Pedidos del Día - UCA", {
+            body: `Tienes ${todayPending.length} pedido(s) por preparar hoy.`,
+            tag: 'uca-today-orders'
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  }, [user, orders]);
+
   // Compute metrics based on retrieved orders
   // 1. Total Hoy: Orders delivering today
   // 2. Pendientes: status in ['pendiente', 'en_proceso']
@@ -54,7 +84,7 @@ export const Dashboard = () => {
     let totalHoy = 0;
     let pendientes = 0;
     let entregados = 0;
-
+ 
     orders.forEach(o => {
       const deliveryDate = toDate(o.fechaEntrega);
       if (deliveryDate.toDateString() === todayStr) {
@@ -134,7 +164,7 @@ export const Dashboard = () => {
                 </div>
                 <p className="text-[11px] text-white/80 font-medium flex items-center gap-1">
                   <MapPin size={10} className="fill-white/10" />
-                  Sede: {user?.rol === 'admin' ? 'Ver Todas' : user?.sede}
+                  Sede: {canSeeAllSedes ? 'Ver Todas' : user?.sede}
                 </p>
               </div>
             </div>
@@ -159,8 +189,8 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Admin Sede Selector Row */}
-          {user?.rol === 'admin' && (
+          {/* Sede Selector Row */}
+          {canSeeAllSedes && (
             <div className="mt-4 flex items-center justify-between gap-3 bg-white/10 p-2.5 rounded-2xl border border-white/15">
               <span className="text-xs font-bold text-white/95 flex items-center gap-1">
                 <MapPin size={12} />
@@ -185,6 +215,36 @@ export const Dashboard = () => {
 
       {/* Main Content Area */}
       <main className="px-5 mt-6 pb-6 space-y-5 flex-1 max-w-2xl mx-auto w-full">
+        {/* Pastelero Alerts Banner */}
+        {user?.rol === 'pastelero' && (() => {
+          const todayStr = new Date().toDateString();
+          const todayPending = orders.filter(o => {
+            const d = toDate(o.fechaEntrega);
+            return d.toDateString() === todayStr && o.estado === 'registrado';
+          });
+
+          if (todayPending.length === 0) return null;
+
+          return (
+            <div className="bg-amber-50 border border-amber-200 p-4 rounded-3xl shadow-sm flex items-start gap-3 text-amber-900 animate-fadeIn">
+              <span className="text-xl">📢</span>
+              <div className="space-y-1">
+                <h4 className="font-bold text-sm">Recordatorio de Producción</h4>
+                <p className="text-xs text-amber-800 font-medium">
+                  Tienes **{todayPending.length} pedido(s)** pendientes de preparar para hoy:
+                </p>
+                <ul className="list-disc pl-4 text-xs font-semibold space-y-0.5 text-amber-700 mt-1">
+                  {todayPending.map(o => (
+                    <li key={o.id}>
+                      {o.cliente} - {o.producto} ({o.cantidad}x) - {new Date(o.fechaEntrega).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Metrics Grid */}
         <section className="grid grid-cols-3 gap-2.5">
           <StatCard 

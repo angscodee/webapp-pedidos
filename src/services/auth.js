@@ -14,7 +14,7 @@ const DEFAULT_MOCK_USERS = [
     uid: 'vendedor-sd-uid',
     usuario: 'Vendedor SD',
     email: 'sd@unoconaroma.com',
-    password: 'SD123',
+    password: 'sd123',
     sede: 'SD',
     rol: 'vendedor'
   },
@@ -22,7 +22,7 @@ const DEFAULT_MOCK_USERS = [
     uid: 'vendedor-florencia-uid',
     usuario: 'Vendedor Florencia',
     email: 'fm@unoconaroma.com',
-    password: 'Fm123',
+    password: 'fm123',
     sede: 'Florencia',
     rol: 'vendedor'
   },
@@ -38,7 +38,7 @@ const DEFAULT_MOCK_USERS = [
     uid: 'vendedor-porvenir-uid',
     usuario: 'Vendedor Porvenir',
     email: 'porvenir@unoconaroma.com',
-    password: 'PV123',
+    password: 'pv123',
     sede: 'Porvenir',
     rol: 'vendedor'
   },
@@ -46,9 +46,17 @@ const DEFAULT_MOCK_USERS = [
     uid: 'vendedor-quintanas-uid',
     usuario: 'Vendedor Las Quintanas',
     email: 'quintanas@unoconaroma.com',
-    password: 'QT123',
+    password: 'qt123',
     sede: 'Las Quintanas',
     rol: 'vendedor'
+  },
+  {
+    uid: 'pastelero-mock-uid',
+    usuario: 'Pastelero Principal',
+    email: 'pastelero@unoconaroma.com',
+    password: 'pastelerouca',
+    sede: 'SD',
+    rol: 'pastelero'
   }
 ];
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { getOrderById, updateOrderStatus, updateOrder, toDate } from '../services/orders';
+import { getOrderById, updateOrderStatus, updateOrder, deleteOrder, uploadReferenceImage, toDate } from '../services/orders';
 import { StatusBadge } from '../components/StatusBadge';
 import { OrderForm } from '../components/OrderForm';
 import { 
@@ -20,7 +20,11 @@ import {
   FileText,
   Camera,
   RotateCcw,
-  Pencil
+  Pencil,
+  Trash2,
+  Upload,
+  Check,
+  AlertTriangle
 } from 'lucide-react';
 
 export const OrderDetail = () => {
@@ -71,6 +75,119 @@ export const OrderDetail = () => {
       setIsEditOpen(false);
     } catch (e) {
       alert('Error al actualizar pedido: ' + e.message);
+    }
+  };
+
+  const handleDeleteClick = async () => {
+    if (!order) return;
+    if (window.confirm('¿Está seguro de que desea eliminar este pedido permanentemente?')) {
+      try {
+        setUpdating(true);
+        await deleteOrder(order.id);
+        navigate('/');
+      } catch (e) {
+        alert('Error al eliminar pedido: ' + e.message);
+      } finally {
+        setUpdating(false);
+      }
+    }
+  };
+
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [correctionComment, setCorrectionComment] = useState('');
+
+  const getProductionStatus = () => {
+    if (!order || !order.historial) return { photo: null, status: 'none', comment: '' };
+    
+    const uploads = [...order.historial].reverse().filter(h => h.estado === 'produccion_lista' || h.imagenProduccion);
+    const approvals = [...order.historial].reverse().filter(h => h.estado === 'produccion_aprobada' || h.estado === 'produccion_corregir');
+    
+    const latestUpload = uploads[0];
+    const latestApproval = approvals[0];
+    
+    if (!latestUpload) {
+      return { photo: null, status: 'none', comment: '' };
+    }
+    
+    if (latestApproval && new Date(latestApproval.fecha) > new Date(latestUpload.fecha)) {
+      return {
+        photo: latestUpload.imagenProduccion,
+        status: latestApproval.estado === 'produccion_aprobada' ? 'aprobado' : 'corregir',
+        comment: latestApproval.comentario || '',
+        by: latestApproval.modificadoPorNombre
+      };
+    }
+    
+    return {
+      photo: latestUpload.imagenProduccion,
+      status: 'pendiente',
+      comment: '',
+      by: latestUpload.modificadoPorNombre
+    };
+  };
+
+  const handleProductionPhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !order || !user) return;
+    
+    try {
+      setUploadingImage(true);
+      const imageUrl = await uploadReferenceImage(file);
+      
+      const productionNode = {
+        estado: 'produccion_lista',
+        fecha: new Date().toISOString(),
+        modificadoPor: user.uid,
+        modificadoPorNombre: user.usuario || 'Pastelero',
+        imagenProduccion: imageUrl
+      };
+      
+      const updatedOrder = await updateOrder(order.id, {
+        ...order,
+        fechaEntrega: order.fechaEntrega,
+        historial: [...(order.historial || []), productionNode]
+      }, user);
+      
+      setOrder(updatedOrder);
+      alert('Foto de producción subida con éxito.');
+    } catch (err) {
+      alert('Error al subir foto: ' + err.message);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleProductionApproval = async (approve) => {
+    if (!order || !user) return;
+    if (!approve && !correctionComment.trim()) {
+      alert('Por favor, ingrese un comentario explicando la corrección requerida.');
+      return;
+    }
+    
+    try {
+      setUpdating(true);
+      
+      const approvalNode = {
+        estado: approve ? 'produccion_aprobada' : 'produccion_corregir',
+        fecha: new Date().toISOString(),
+        modificadoPor: user.uid,
+        modificadoPorNombre: user.usuario || 'Usuario',
+        comentario: approve ? '' : correctionComment.trim()
+      };
+      
+      const updatedOrder = await updateOrder(order.id, {
+        ...order,
+        fechaEntrega: order.fechaEntrega,
+        historial: [...(order.historial || []), approvalNode]
+      }, user);
+      
+      setOrder(updatedOrder);
+      setCorrectionComment('');
+      alert(approve ? 'Pedido aprobado con éxito.' : 'Corrección solicitada con éxito.');
+    } catch (err) {
+      alert('Error al procesar acción: ' + err.message);
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -160,12 +277,12 @@ export const OrderDetail = () => {
   const whatsappUrl = `https://wa.me/51${telefono}?text=Hola%20${encodeURIComponent(cliente)},%20te%20escribimos%20de%20Uno%20con%20Aroma%20sobre%20tu%20pedido%20de%20${encodeURIComponent(producto)}.`;
   const nextActions = getNextStatuses();
 
-  // Warning alert: if delivery scheduled before 2 PM, must be in branch by the day before.
+  // Warning alert: if delivery scheduled before 3 PM (15:00), must be in branch by the day before.
   // If it is the delivery day (or later) and still 'registrado', show warning.
   const isLateWarning = estado === 'registrado' && (() => {
     try {
       const delivery = toDate(fechaEntrega);
-      if (delivery.getHours() < 14) {
+      if (delivery.getHours() < 15) {
         const startOfDeliveryDay = new Date(delivery.getFullYear(), delivery.getMonth(), delivery.getDate());
         return new Date() >= startOfDeliveryDay;
       }
@@ -194,6 +311,16 @@ export const OrderDetail = () => {
             <h2 className="text-base font-black text-slate-800">Detalle de Pedido</h2>
           </div>
           <div className="flex items-center gap-2">
+            {user?.rol === 'admin' && (
+              <button 
+                onClick={handleDeleteClick}
+                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl border border-rose-100 transition-all flex items-center gap-1.5 text-xs font-bold active:scale-95"
+                title="Eliminar Pedido"
+              >
+                <Trash2 size={13} className="stroke-[2.5]" />
+                <span>Eliminar</span>
+              </button>
+            )}
             <button 
               onClick={() => setIsEditOpen(true)}
               className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl border border-amber-100/50 transition-all flex items-center gap-1.5 text-xs font-bold active:scale-95"
@@ -218,7 +345,7 @@ export const OrderDetail = () => {
                 <h3 className="text-xl font-bold text-slate-800 leading-tight">{cliente}</h3>
                 {isLateWarning && (
                   <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-800 border border-rose-200 animate-pulse">
-                    ⚠️ Alerta: Debió llegar ayer
+                    ⚠️ Alerta: Pedido de la mañana (debe enviarse el día anterior a las 3 PM)
                   </span>
                 )}
               </div>
@@ -323,6 +450,112 @@ export const OrderDetail = () => {
             <span>Creado por: {creadoPorNombre}</span>
             <span>{formatDateTime(creadoEn)}</span>
           </div>
+        </section>
+
+        {/* Control de Producción (Pastelería) Card */}
+        <section className="bg-white rounded-3xl border border-slate-100 p-5 shadow-premium space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">Control de Producción</h4>
+            {(() => {
+              const prod = getProductionStatus();
+              if (prod.status === 'aprobado') {
+                return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 uppercase flex items-center gap-1"><Check size={10} className="stroke-[3]" /> Aprobado</span>;
+              } else if (prod.status === 'corregir') {
+                return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 uppercase flex items-center gap-1"><AlertTriangle size={10} /> Corregir</span>;
+              } else if (prod.status === 'pendiente') {
+                return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 uppercase animate-pulse">Pendiente V°B°</span>;
+              }
+              return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-500 uppercase">Sin iniciar</span>;
+            })()}
+          </div>
+
+          {/* Render Production Photo if exists */}
+          {(() => {
+            const prod = getProductionStatus();
+            if (!prod.photo) {
+              return (
+                <div className="text-center py-6 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                  <p className="text-xs font-semibold text-slate-400">No se ha subido foto del pedido terminado.</p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-3">
+                <div className="rounded-2xl overflow-hidden border border-slate-100 aspect-video relative bg-slate-50">
+                  <img src={prod.photo} alt="Foto de producción terminada" className="w-full h-full object-cover" />
+                </div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase">
+                  Subida por: <span className="text-slate-600">{prod.by || 'Pastelero'}</span>
+                </p>
+                {prod.comment && (
+                  <div className="bg-rose-50 border border-rose-100/50 text-rose-800 rounded-2xl p-3.5 text-xs font-medium leading-relaxed">
+                    <p className="font-bold text-[10px] uppercase text-rose-500 mb-1">Motivo de corrección (por {prod.by}):</p>
+                    {prod.comment}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Baker actions: file upload */}
+          {user?.rol === 'pastelero' && (
+            <div className="space-y-2">
+              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 hover:border-amber-400 transition-all group">
+                <div className="flex flex-col items-center justify-center pt-4 pb-4 text-slate-400 group-hover:text-amber-500">
+                  <Upload size={20} className="mb-1 stroke-[1.5] animate-bounce" />
+                  <p className="text-xs font-bold">{uploadingImage ? 'Subiendo imagen...' : 'Subir Foto Terminado (V°B°)'}</p>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProductionPhotoUpload}
+                  disabled={uploadingImage}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          )}
+
+          {/* Seller / Admin actions: approve or request correction */}
+          {(() => {
+            const prod = getProductionStatus();
+            const canReview = user?.rol === 'admin' || (user?.rol === 'vendedor' && user?.sede === sede);
+            
+            if (!prod.photo || !canReview || prod.status === 'aprobado') return null;
+
+            return (
+              <div className="bg-slate-50/50 p-4 rounded-3xl border border-slate-100 space-y-3">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Revisión de Sede</span>
+                
+                <textarea
+                  placeholder="Detalles sobre corrección (requerido si pides corregir)..."
+                  value={correctionComment}
+                  onChange={(e) => setCorrectionComment(e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-amber-500 bg-white"
+                />
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleProductionApproval(false)}
+                    disabled={updating}
+                    className="py-2.5 px-3 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100/50 text-rose-700 text-xs font-bold transition-all active:scale-95 cursor-pointer text-center"
+                  >
+                    Pedir Corrección
+                  </button>
+                  <button
+                    onClick={() => handleProductionApproval(true)}
+                    disabled={updating}
+                    className="py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-all active:scale-95 cursor-pointer text-center flex items-center justify-center gap-1.5"
+                  >
+                    <Check size={14} className="stroke-[2.5]" />
+                    Dar Visto Bueno
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
         </section>
 
         {/* Actions Transition Panel */}

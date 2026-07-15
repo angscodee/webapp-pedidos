@@ -6,9 +6,12 @@ export const useOrders = (selectedSede = null) => {
   const { user } = useAuth();
 
   // Determine branch filter based on user permissions
-  // Vendedores are strictly scoped to their own branch (sede)
-  // Admins can scope to a selected branch or see all ('TODAS')
-  const activeSedeFilter = user?.rol === 'admin' 
+  // Admins, Vendedor SD, and Pastelero can scope to a selected branch or see all ('TODAS')
+  const canSeeAllSedes = user?.rol === 'admin' || 
+                         user?.rol === 'pastelero' || 
+                         (user?.rol === 'vendedor' && user?.sede === 'SD');
+
+  const activeSedeFilter = canSeeAllSedes
     ? (selectedSede || 'TODAS') 
     : (user?.sede || '');
 

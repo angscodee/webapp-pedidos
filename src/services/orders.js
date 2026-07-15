@@ -399,3 +399,21 @@ export const uploadReferenceImage = async (file) => {
 
   return urlData.publicUrl;
 };
+
+// ─── Delete Order (Admin-only) ────────────────────────────────────────────────
+export const deleteOrder = async (orderId) => {
+  if (!hasSupabaseCredentials) {
+    const orders = getMockOrders();
+    const filtered = orders.filter(o => o.id !== orderId);
+    saveMockOrders(filtered);
+    return true;
+  }
+
+  const { error } = await supabase
+    .from('pedidos')
+    .delete()
+    .eq('id', orderId);
+
+  if (error) throw new Error(error.message);
+  return true;
+};
