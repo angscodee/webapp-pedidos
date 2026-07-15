@@ -323,7 +323,10 @@ export const OrderDetail = () => {
             >
               <ArrowLeft size={20} className="stroke-[2.5]" />
             </button>
-            <h2 className="text-base font-black text-slate-800">Detalle de Pedido</h2>
+            <div className="flex flex-col">
+              <h2 className="text-base font-black text-slate-800">Detalle de Pedido</h2>
+              <span className="text-[9px] font-black text-amber-500 tracking-wider leading-none">v1.3 (07:35 AM)</span>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {user?.rol === 'admin' && (
