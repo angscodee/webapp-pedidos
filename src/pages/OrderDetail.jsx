@@ -127,12 +127,24 @@ export const OrderDetail = () => {
   };
 
   const handleProductionPhotoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file || !order || !user) return;
+    console.log('handleProductionPhotoUpload triggered');
+    const file = e.target.files?.[0];
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
+    if (!order || !user) {
+      console.error('Missing order or user context:', { order, user });
+      return;
+    }
+    
+    console.log('Selected file:', file.name, 'Size:', file.size, 'Type:', file.type);
     
     try {
       setUploadingImage(true);
+      console.log('Starting Supabase Storage upload...');
       const imageUrl = await uploadReferenceImage(file);
+      console.log('Supabase Storage upload succeeded! Image URL:', imageUrl);
       
       const productionNode = {
         estado: 'produccion_lista',
@@ -142,15 +154,18 @@ export const OrderDetail = () => {
         imagenProduccion: imageUrl
       };
       
+      console.log('Updating order history in database...', productionNode);
       const updatedOrder = await updateOrder(order.id, {
         ...order,
         fechaEntrega: order.fechaEntrega,
         historial: [...(order.historial || []), productionNode]
       }, user);
       
+      console.log('Order updated in database successfully:', updatedOrder);
       setOrder(updatedOrder);
       alert('Foto de producción subida con éxito.');
     } catch (err) {
+      console.error('Error in handleProductionPhotoUpload:', err);
       alert('Error al subir foto: ' + err.message);
     } finally {
       setUploadingImage(false);
@@ -356,18 +371,20 @@ export const OrderDetail = () => {
               </p>
             </div>
             
-            <div className="flex gap-2 items-center">
-              <a 
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-500/10 transition-all active:scale-95 flex items-center gap-1.5 font-bold text-xs"
-                title="WhatsApp Cliente"
-              >
-                <MessageCircle size={16} />
-                <span>WhatsApp</span>
-              </a>
-            </div>
+            {user?.rol !== 'pastelero' && (
+              <div className="flex gap-2 items-center">
+                <a 
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-500/10 transition-all active:scale-95 flex items-center gap-1.5 font-bold text-xs"
+                  title="WhatsApp Cliente"
+                >
+                  <MessageCircle size={16} />
+                  <span>WhatsApp</span>
+                </a>
+              </div>
+            )}
           </div>
 
           <hr className="border-slate-50" />
@@ -513,7 +530,7 @@ export const OrderDetail = () => {
                   accept="image/*"
                   onChange={handleProductionPhotoUpload}
                   disabled={uploadingImage}
-                  className="hidden"
+                  className="sr-only"
                 />
               </label>
             </div>
