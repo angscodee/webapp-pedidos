@@ -316,7 +316,7 @@ export const OrderDetail = () => {
             </button>
             <div className="flex flex-col">
               <h2 className="text-base font-black text-slate-800">Detalle de Pedido</h2>
-              <span className="text-[9px] font-black text-amber-500 tracking-wider leading-none">v1.3 (07:35 AM)</span>
+              <span className="text-[9px] font-black text-amber-500 tracking-wider leading-none">v1.4 (08:50 AM)</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
