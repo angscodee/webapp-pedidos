@@ -209,16 +209,7 @@ export const OrderDetail = () => {
   const getNextStatuses = () => {
     if (!order) return [];
     
-    // Admins can transition to any state. Vendedores transition sequentially
-    if (user?.rol === 'admin') {
-      return [
-        { status: 'registrado', label: 'Registrado', classes: 'border-amber-200 text-amber-700 bg-amber-50' },
-        { status: 'en_sede', label: 'En Sede', classes: 'border-blue-200 text-blue-700 bg-blue-50' },
-        { status: 'entregado', label: 'Entregado', classes: 'border-emerald-200 text-emerald-700 bg-emerald-50' }
-      ].filter(s => s.status !== order.estado);
-    }
-
-    // Sellers follow a restricted sequence
+    // Both Admins and Sellers follow the same strict sequential flow to keep the UI clean
     switch (order.estado) {
       case 'registrado':
         return [{ status: 'en_sede', label: 'Recibido en Sede', classes: 'bg-blue-500 hover:bg-blue-600 text-white font-bold' }];
@@ -608,39 +599,20 @@ export const OrderDetail = () => {
           <section className="bg-white rounded-3xl border border-slate-100 p-5 shadow-premium space-y-3">
             <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">Actualizar Estado</h4>
             
-            {user?.rol === 'admin' ? (
-              <div className="flex flex-col md:grid md:grid-cols-2 gap-2">
-                {nextActions.map(action => {
-                  const isTransitionDisabled = action.status === 'en_sede' && getProductionStatus().status !== 'aprobado';
-                  return (
-                    <button
-                      key={action.status}
-                      onClick={() => handleStatusChange(action.status)}
-                      disabled={updating || isTransitionDisabled}
-                      className={`py-3 px-3 rounded-2xl border text-xs font-bold transition-all active:scale-98 ${action.classes} ${isTransitionDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-                      title={isTransitionDisabled ? 'Requiere Visto Bueno de producción' : ''}
-                    >
-                      Marcar como "{action.label}" {isTransitionDisabled ? '(Falta V°B°)' : ''}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              nextActions.map(action => {
-                const isTransitionDisabled = action.status === 'en_sede' && getProductionStatus().status !== 'aprobado';
-                return (
-                  <button
-                    key={action.status}
-                    onClick={() => handleStatusChange(action.status)}
-                    disabled={updating || isTransitionDisabled}
-                    className={`w-full py-4 rounded-2xl text-xs font-black shadow-lg shadow-amber-500/10 transition-all active:scale-98 ${action.classes} ${isTransitionDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-                    title={isTransitionDisabled ? 'Requiere Visto Bueno de producción' : ''}
-                  >
-                    {action.label} {isTransitionDisabled ? '(Falta V°B°)' : ''}
-                  </button>
-                );
-              })
-            )}
+            {nextActions.map(action => {
+              const isTransitionDisabled = action.status === 'en_sede' && getProductionStatus().status !== 'aprobado';
+              return (
+                <button
+                  key={action.status}
+                  onClick={() => handleStatusChange(action.status)}
+                  disabled={updating || isTransitionDisabled}
+                  className={`w-full py-4 rounded-2xl text-xs font-black shadow-lg shadow-amber-500/10 transition-all active:scale-98 ${action.classes} ${isTransitionDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  title={isTransitionDisabled ? 'Requiere Visto Bueno de producción' : ''}
+                >
+                  {action.label} {isTransitionDisabled ? '(Falta V°B°)' : ''}
+                </button>
+              );
+            })}
           </section>
         )}
 
